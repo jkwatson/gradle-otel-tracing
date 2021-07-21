@@ -8,4 +8,4 @@
  */
 
 rootProject.name = "gradle-otel-tracing"
-include("plugin")
+include("otel-gradle-tracing")

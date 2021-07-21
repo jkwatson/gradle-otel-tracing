@@ -14,8 +14,8 @@ repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
-project.version = "0.0.1-SNAPSHOT"
 project.group="io.opentelemetry"
+project.version = "0.0.1-SNAPSHOT"
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -36,7 +36,7 @@ dependencies {
 gradlePlugin {
     // Define the plugin
     val tracing by plugins.creating {
-        id = "io.opentelemetry.gradle.tracing"
+        id = "io.opentelemetry.gradle-tracing-plugin"
         implementationClass = "io.opentelemetry.gradle.tracing.OtelTracingPlugin"
     }
 }
@@ -57,19 +57,4 @@ val functionalTest by tasks.registering(Test::class) {
 tasks.check {
     // Run the functional tests as part of `check`
     dependsOn(functionalTest)
-}
-
-publishing {
-    repositories {
-        mavenLocal()
-    }
-    publications {
-        register<MavenPublication>("pluginPublication") {
-            groupId = "io.opentelemetry"
-            artifactId = "gradle-tracing-plugin"
-            plugins.withId("java-gradle-plugin") {
-                from(components["java"])
-            }
-        }
-    }
 }
