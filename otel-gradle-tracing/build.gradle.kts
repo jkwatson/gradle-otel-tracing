@@ -21,6 +21,7 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.4.1-alpha")
     implementation(platform("io.opentelemetry:opentelemetry-bom:1.4.1"))
     implementation("io.opentelemetry:opentelemetry-api")
     implementation("io.opentelemetry:opentelemetry-sdk")

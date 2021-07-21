@@ -1,15 +1,12 @@
 package io.opentelemetry.gradle.tracing
 
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.resources.Resource
-import io.opentelemetry.sdk.trace.SdkTracerProvider
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
+import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration
 import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.Plugin
@@ -34,11 +31,15 @@ class OtelTracingPlugin : Plugin<Project> {
             override fun projectsEvaluated(gradle: Gradle) {}
 
             override fun buildFinished(result: BuildResult) {
+                if (result.failure != null) {
+                    rootProjectSpan.setStatus(StatusCode.ERROR)
+                    rootProjectSpan.recordException(result.failure!!)
+                }
                 rootProjectSpan.end()
                 openTelemetry.sdkTracerProvider.forceFlush()
             }
         })
-        val spansByTask: MutableMap<Task, Span> = mutableMapOf<Task, Span>()
+        val spansByTask: MutableMap<Task, Span> = mutableMapOf()
         project.gradle.taskGraph.beforeTask {
             val projectSpan: Span
             val taskProject = it.project
@@ -62,7 +63,7 @@ class OtelTracingPlugin : Plugin<Project> {
             if (span != null) {
                 val failure = it.state.failure
                 if (failure != null) {
-                    span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR)
+                    span.setStatus(StatusCode.ERROR)
                     span.recordException(failure)
                     span.setAttribute("error.message", failure.message ?: "None")
                     if (failure.cause != null) {
@@ -77,25 +78,12 @@ class OtelTracingPlugin : Plugin<Project> {
     }
 
     private fun initializeOpenTelemetry(project: Project): OpenTelemetrySdk {
-        val openTelemetry: OpenTelemetrySdk = OpenTelemetrySdk.builder()
-            .setTracerProvider(
-                SdkTracerProvider.builder()
-                    .addSpanProcessor(
-                        BatchSpanProcessor.builder(
-                            OtlpGrpcSpanExporter.builder().build()
-                        ).build()
-                    )
-                    .setResource(
-                        Resource.create(
-                            Attributes.of(
-                                AttributeKey.stringKey("service.name"),
-                                project.name + " Build"
-                            )
-                        )
-                    )
-                    .build()
-            ).build()
-        return openTelemetry
+        System.setProperty("otel.service.name", project.name + " Build")
+        val sdk = OpenTelemetrySdkAutoConfiguration.initialize()
+        //this is a super-hack to undo what the auto-configure module does by default, otherwise the global pollutes
+        //the gradle daemon's JVM state.
+        GlobalOpenTelemetry.resetForTest()
+        return sdk
     }
 }
 private val ExtensionAware.extra: ExtraPropertiesExtension
