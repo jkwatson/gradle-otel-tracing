@@ -21,8 +21,11 @@ class OtelTracingPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val openTelemetry: OpenTelemetrySdk = initializeOpenTelemetry(project)
 
-        val tracer: Tracer = openTelemetry.getTracer("opentelemetry-build")
-        val rootProjectSpan: Span = tracer.spanBuilder(project.displayName).startSpan()
+        val tracer: Tracer = openTelemetry.getTracer("opentelemetry-build-tracing")
+        val startParameters = project.gradle.startParameter.toString()
+        val rootProjectSpan: Span = tracer.spanBuilder(project.displayName)
+            .setAttribute("gradleStartParameters", startParameters)
+            .startSpan()
         project.gradle.addBuildListener(object : BuildListener {
             override fun settingsEvaluated(settings: Settings) {}
 
