@@ -14,7 +14,7 @@ repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
-project.group="io.opentelemetry"
+project.group="com.github.jkwatson"
 project.version = "0.0.1-SNAPSHOT"
 
 dependencies {
@@ -38,7 +38,7 @@ dependencies {
 gradlePlugin {
     // Define the plugin
     val tracing by plugins.creating {
-        id = "io.opentelemetry.gradle-tracing-plugin"
+        id = "com.github.jkwatson.gradle-tracing-plugin"
         implementationClass = "io.opentelemetry.gradle.tracing.OtelTracingPlugin"
     }
 }
