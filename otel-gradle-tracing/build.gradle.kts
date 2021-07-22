@@ -38,7 +38,7 @@ dependencies {
 gradlePlugin {
     // Define the plugin
     val tracing by plugins.creating {
-        id = "com.github.jkwatson.gradle-tracing-plugin"
+        id = "com.github.jkwatson.gradle-otel-tracing"
         implementationClass = "io.opentelemetry.gradle.tracing.OtelTracingPlugin"
     }
 }
